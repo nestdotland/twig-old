@@ -9,7 +9,8 @@ import readDir, { FileData } from "../recursive_read";
 export default (arweave: ArwConnection) => {
   const router = Router();
   router.post("/new", async (req, res, next) => {
-    let tmpID = req.body.tmpID;
+    let tmpID = req.body.tmp_id;
+    let indexFile = req.body.entry;
     if (!has(tmpID)) return res.sendStatus(500);
     let txIds = [];
     const files: FileData[] = await readDir(path.join(__dirname, "../../.tmp/", tmpID))
@@ -24,11 +25,28 @@ export default (arweave: ArwConnection) => {
       });
       txIds.push({
         txId,
-        name: file.filename,
-        relativePath
-      });
+        inManifest: relativePath
+      } as { [x: string]: { inManifest: string, txId: string } });
     }
-    res.send(txIds);
+    let manifestId = await save(arweave, {
+      name: "manifest.json",
+      type: "application/x.arweave-manifest+json",
+      data: Buffer.from(JSON.stringify({
+        manifest: "arweave/paths",
+        version: "0.1.0",
+        index: {
+          path: indexFile.replace(/^\//, ""),
+        },
+        paths: Object.entries(txIds).reduce((p, [ f, l ]) => {
+          p[f.replace(/^\//, "")] = { id: l.txId };
+          return p;
+        }, {} as { [x: string]: { id: string } }),
+      })),
+    });
+    res.send({
+      files: txIds,
+      prefix: `${arweave.api.config.protocol}://${arweave.api.config.host}/${manifestId}`; 
+    });
   });
   return router;
 };
