@@ -24,9 +24,9 @@ export default (arweave: ArwConnection) => {
         data: fc,
       });
       txIds.push({
-        txId,
+        txId: txId,
         inManifest: relativePath
-      } as { [x: string]: { inManifest: string, txId: string } });
+      });
     }
     let manifestId = await save(arweave, {
       name: "manifest.json",
@@ -45,7 +45,7 @@ export default (arweave: ArwConnection) => {
     });
     res.send({
       files: txIds,
-      prefix: `${arweave.api.config.protocol}://${arweave.api.config.host}/${manifestId}`; 
+      prefix: `${arweave.api.config.protocol}://${arweave.api.config.host}/${manifestId}`
     });
   });
   return router;
