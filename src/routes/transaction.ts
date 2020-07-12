@@ -5,18 +5,24 @@ import { has } from "../fs";
 import * as fs from "fs";
 import * as path from "path";
 import readDir, { FileData } from "../recursive_read";
+import * as tar from "tar-fs";
 
 export default (arweave: ArwConnection) => {
   const router = Router();
   router.post("/new", async (req, res, next) => {
+    console.log(req.body);
     let tmpID = req.body.tmp_id;
     let indexFile = req.body.entry;
-    if (!has(tmpID)) return res.sendStatus(500);
+    if (!has(`${tmpID}.tar`)) return res.sendStatus(500);
     let txIds = [];
-    const files: FileData[] = await readDir(path.join(__dirname, "../../.tmp/", tmpID))
+    // extracting a directory
+    fs.mkdirSync(path.join(__dirname, `../../../api-next/tmp/ext_${tmpID}`));
+    fs.createReadStream(path.join(__dirname, `../../../api-next/tmp/${tmpID}.tar`)).pipe(tar.extract(path.join(__dirname, `../../../api-next/tmp/ext_${tmpID}`)));
+    const files: FileData[] = await readDir(path.join(__dirname, `../../../api-next/tmp/ext_${tmpID}`))
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      let relativePath = path.relative(path.join(__dirname, "../../.tmp", tmpID), file.fullpath);
+      console.log(file)
+      let relativePath = path.relative(path.join(__dirname, `../../../api-next/tmp/ext_${tmpID}`), file.fullpath);
       let fc = fs.readFileSync(file.fullpath);
       let txId = await save(arweave, {
         name: file.filename,
@@ -43,6 +49,7 @@ export default (arweave: ArwConnection) => {
         }, {} as { [x: string]: { id: string } }),
       })),
     });
+    console.log(txIds)
     res.send({
       files: txIds,
       prefix: `${arweave.api.config.protocol}://${arweave.api.config.host}/${manifestId}`

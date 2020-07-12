@@ -1,12 +1,14 @@
 import fs from "fs";
 import path from "path";
 
+export const tmpPath = "../../api-next/tmp";
+
 export function init(time = 60, age = 1800) {
-  if (!fs.existsSync("../../api-next/.tmp")) fs.mkdirSync("../../api-next/.tmp");
+  if (!fs.existsSync(tmpPath)) fs.mkdirSync(tmpPath);
 
   const _interval = () => {
-    fs.readdirSync("../../api-next/.tmp").map(el => {
-      let f = path.join("../../api-next/.tmp", el);
+    fs.readdirSync(tmpPath).map(el => {
+      let f = path.join(tmpPath, el);
       let stats = fs.statSync(f);
 
       if (Date.now() - stats.mtimeMs > age * 1000) return fs.unlinkSync(f);
@@ -18,17 +20,17 @@ export function init(time = 60, age = 1800) {
 }
 
 export function save(id: string, data: Buffer) {
-  fs.writeFileSync(path.join("../../api-next/.tmp", id), data);
+  fs.writeFileSync(path.join(tmpPath, id), data);
 }
 
 export function get(id: string) {
-  let f = path.join("../../api-next/.tmp", id);
+  let f = path.join(tmpPath, id);
   if (fs.existsSync(f)) {
     return fs.readFileSync(f);
   } else return null;
 }
 
 export function has(id: string) {
-  let f = path.join("../../api-next/.tmp", id);
+  let f = path.join(__dirname, tmpPath, id);
   return fs.existsSync(f);
 }
