@@ -8,6 +8,7 @@ export interface FileData {
   dirname: string;
 }
 
+// (async () => {console.log(await globPromise(path.join(__dirname,"../../api-next/tmp/ext_1b4f9df3da6c4fb6ae90a18a102f4a58")));})()
 export default function globPromise(dir: string): Promise<FileData[]> {
   return new Promise((resolve, reject) => {
     glob(
