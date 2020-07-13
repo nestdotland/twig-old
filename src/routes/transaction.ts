@@ -14,7 +14,7 @@ export default (arweave: ArwConnection) => {
     let tmpID = req.body.tmp_id;
     let indexFile = req.body.entry;
     if (!has(`${tmpID}.tar`)) return res.sendStatus(500);
-    let txIds: { [x: string]: { inManifest: string, txId: string } };
+    let txIds: { [x: string]: { inManifest: string, txId: string } } = {};
     // extracting a directory
     fs.mkdirSync(path.join(__dirname, `../../../api-next/tmp/ext_${tmpID}`));
     let tStream = tar.extract(path.join(__dirname, `../../../api-next/tmp/ext_${tmpID}`));
