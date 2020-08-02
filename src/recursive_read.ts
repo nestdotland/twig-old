@@ -18,19 +18,19 @@ export default function globPromise(dir: string): Promise<FileData[]> {
         if (err) {
           reject(err);
         } else {
-            let filesObject = files.map(file => {
-              let regexp = /^(.*[\\\/])(.*)$/;
-              let match = regexp.exec(file);
-              return {
-                fullpath: file,
-                filepath: match[1],
-                filename: match[2],
-                dirname: regexp.exec(
-                  match[1].substring(0, match[1].length - 1),
-                )[2],
-              };
-            });
-            resolve(filesObject);
+          let filesObject = files.map((file) => {
+            let regexp = /^(.*[\\\/])(.*)$/;
+            let match = regexp.exec(file);
+            return {
+              fullpath: file,
+              filepath: match[1],
+              filename: match[2],
+              dirname: regexp.exec(
+                match[1].substring(0, match[1].length - 1),
+              )[2],
+            };
+          });
+          resolve(filesObject);
         }
       },
     );
