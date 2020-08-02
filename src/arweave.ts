@@ -3,6 +3,17 @@ import Credentials from "../arweave-keyfile.json";
 import { arweave as ArConfig } from "../twig.json";
 import { JWKInterface } from "arweave/node/lib/wallet";
 
+const pstContract = "12345678910abcdefg";
+
+export const arweaveInit = Arweave.init({
+  host: ArConfig.host,
+  port: ArConfig.port,
+  protocol: ArConfig.protocol,
+  timeout: ArConfig.timeout,
+  logging: process.env.NODE_ENV === "development",
+  logger: (...e) => console.log(...e),
+});
+
 /**
  * Represents an transaction file.
  */
@@ -89,3 +100,175 @@ export async function save(
 
   return transaction.id;
 }
+
+
+/**
+ * Credit to Anish Agnihotri's 'Weve' for the following code
+ * https://github.com/Anish-Agnihotri/weve/blob/master/src/utils/pst.js
+ */
+
+
+/**
+ * Returns the wallet address of the user to send the tip to
+ */
+export const pstAllocation = async () => {
+  let maxPST = 1000000000000;
+  return calculateFeeRecipient(await getWalletList(), maxPST);
+}
+
+/**
+ * Returns the wallet list of PST holders
+ */
+export const getWalletList = async () => {
+  let tipTX = await findContractTip(pstContract);
+  return JSON.parse(await getTXState(tipTX)).walletList;
+}
+
+/**
+ * Calculates the recepient of the PST fee based on weighted randoms
+ * @param stakeholders The list of PST stakeholders
+ * @param maxPST The maximum amount of the PST
+ */
+const calculateFeeRecipient = (stakeholders, maxPST) => {
+  let weightedStakeholders = {};
+
+  for (let i = 0; i < stakeholders.length; i++) {
+    weightedStakeholders[stakeholders[i].addr] = stakeholders[i].balance / maxPST;
+  }
+
+  return weightedRandom(weightedStakeholders);
+}
+
+/**
+ * @param probability The probability of the stakeholders receiving the tip
+ */
+const weightedRandom = probability => {
+  let i, sum = 0, r = Math.random();
+
+  for (i in probability) {
+    sum += probability[i];
+    if (r <= sum) return i;
+  }
+}
+
+
+/**
+ * Helper functions from SmartWeave
+ */
+
+
+/**
+ * Finds the latest contract tip
+ * @param contractID The ID of a given PST smart contract
+ */
+const findContractTip = async contractID => {
+  const contract = await getContract(contractID);
+  let current = contract.contractTX;
+  let state = getTXState(current);
+  let last;
+
+  do {
+    last = current;
+    current = await findNextTX(contract, state, current);
+    state = getTXState(current);
+  }
+  while (current);
+
+  return last;
+};
+
+/**
+ * Returns information about a PST smart contract
+ * @param contractID The ID of a given PST smart contract
+ */
+const getContract = async contractID => {
+  const contractTX = await arweaveInit.transactions.get(contractID);
+  const contractSrcTXID = await getTag(contractTX, 'Contract-Src');
+  const minDiff = await getTag(contractTX, 'Min-Diff');
+  const contractSrcTX = await arweaveInit.transactions.get(contractSrcTXID);
+  const contractSrc = await contractSrcTX.get('data', { decode: true, string: true });
+  const state = await contractTX.get('data', { decode: true, string: true });
+
+  return {
+    id: contractID,
+    contractSrc: contractSrc,
+    initState: state,
+    minDiff: minDiff,
+    contractTX: contractTX
+  }
+}
+
+/**
+ * Finds the next transaction
+ */
+const findNextTX = async (contract, state, currentTX) => {
+  let successorsQuery =
+  {
+    op: 'and',
+    expr1:
+    {
+      op: 'equals',
+      expr1: 'App-Name',
+      expr2: 'nest.land'
+    },
+    expr2:
+    {
+      op: 'equals',
+      expr1: 'Previous-TX',
+      expr2: currentTX.id
+    }
+  }
+  const response = await arweaveInit.api.post(`arql`, successorsQuery)
+  const results = response.data
+
+  let successors = (results == '') ? [] : results
+
+  for (let i = 0; i < successors.length; i++) {
+    let TX = await arweaveInit.transactions.get(successors[i])
+    if (validateNextTX(contract, state, TX))
+      return TX
+  }
+
+  return false
+};
+
+/**
+ * Returns the state of a given transaction
+ * @param TX A transaction ID
+ */
+const getTXState = async (TX) => {
+  if (!TX) return false
+  if (await getTag(TX, 'Type') == "contract")
+    return TX.get('data', { decode: true, string: true })
+  else
+    return JSON.parse(TX.get('data', { decode: true, string: true }))['newState']
+};
+
+
+/**
+ * Returns a boolean signifying whether a transaction has tag 'name'
+ * @param TX The transaction ID
+ * @param name The name of a desired tag
+ */
+const getTag = async (TX, name) => {
+  let tags = TX.get('tags')
+
+  for (let i = 0; i < tags.length; i++)
+    if (tags[i].get('name', { decode: true, string: true }) == name)
+      return tags[i].get('value', { decode: true, string: true })
+
+  return false
+};
+
+/**
+ * Returns data about validating the next transaction
+ */
+const validateNextTX = async (contract, state, nextTX) => {
+  let struct = JSON.parse(nextTX.get('data', { decode: true, string: true }))
+  return (
+    contract.contractSrc,
+    struct.input,
+    state,
+    await arweaveInit.wallets.ownerToAddress(nextTX.owner)
+  );
+};
