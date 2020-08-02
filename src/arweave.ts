@@ -1,6 +1,7 @@
 import Arweave from "arweave/node";
 import Credentials from "../arweave-keyfile.json";
 import { arweave as ArConfig } from "../twig.json";
+import { JWKInterface } from "arweave/node/lib/wallet";
 
 /**
  * Represents an transaction file.
@@ -66,20 +67,22 @@ export async function get(
 
 /**
  * Create an arweave transaction for the file.
- * @param connection The arweave connection pool
+ * @param connection The Arweave connection pool.
  * @param data The file contents and details to be uploaded to Arweave.
+ * @param wallet The user's unique Areweave wallet details. [optional]
  */
 export async function save(
   connection: ArwConnection,
   data: ArwFile,
+  wallet?: JWKInterface,
 ) {
   const transaction = await connection.createTransaction(
     { data: data.data, last_tx: connection.anchor },
-    Credentials,
+    wallet || Credentials,
   );
   transaction.addTag("Content-Type", data.type);
 
-  await connection.transactions.sign(transaction, Credentials);
+  await connection.transactions.sign(transaction, wallet || Credentials);
   const res = await connection.transactions.post(transaction);
 
   if (res.status >= 300) throw new Error("Transaction failed!");

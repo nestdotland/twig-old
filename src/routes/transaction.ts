@@ -19,6 +19,7 @@ export default (arweave: ArwConnection) => {
    */
   router.post("/new", async (req, res, next) => {
     console.log(req.body);
+    let wallet = req.body.wallet;
     let tmpID = req.body.tmp_id;
     let indexFile = req.body.entry;
     if (!has(`${tmpID}.tar`)) return res.sendStatus(500);
@@ -47,7 +48,7 @@ export default (arweave: ArwConnection) => {
           name: file.filename,
           type: getType(file.filename),
           data: fc,
-        });
+        }, wallet);
         txIds[file.filename] = {
           txId: txId,
           inManifest: relativePath,
@@ -67,7 +68,7 @@ export default (arweave: ArwConnection) => {
             return p;
           }, {} as { [x: string]: { id: string } }),
         })),
-      });
+      }, wallet);
       res.send({
         files: txIds,
         prefix:
