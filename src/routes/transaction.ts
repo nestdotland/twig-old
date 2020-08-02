@@ -15,7 +15,7 @@ export default (arweave: ArwConnection) => {
   const router = Router();
 
   /**
-   * Perform a new transaction with contents in a tar file.
+   * Perform a new transaction with contents in a tar file. `/tx/new`
    */
   router.post("/new", async (req, res, next) => {
     console.log(req.body);

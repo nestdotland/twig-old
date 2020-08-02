@@ -1,5 +1,6 @@
 import Arweave from "arweave/node";
 import Credentials from "../arweave-keyfile.json";
+import { arweave as ArConfig } from "../twig.json";
 
 /**
  * Represents an transaction file.
@@ -20,10 +21,10 @@ export type ArwConnection = Arweave & { anchor: string };
  */
 export async function connect(): Promise<ArwConnection> {
   const arweave = Arweave.init({
-    host: "arweave.net",
-    port: 443,
-    protocol: "https",
-    timeout: 20000,
+    host: ArConfig.host,
+    port: ArConfig.port,
+    protocol: ArConfig.protocol,
+    timeout: ArConfig.timeout,
     logging: process.env.NODE_ENV === "development",
     logger: (...e) => console.log(...e),
   });

@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
-
-export const tmpPath = "../../api-next/tmp";
+import { tmp as tmpPath } from "../twig.json";
 
 export function init(time = 60, age = 1800) {
   if (!fs.existsSync(tmpPath)) fs.mkdirSync(tmpPath);
@@ -30,7 +29,11 @@ export function get(id: string) {
   } else return null;
 }
 
-export function has(id: string) {
+export function has(id: string): boolean {
   let f = path.join(__dirname, tmpPath, id);
   return fs.existsSync(f);
+}
+
+export function createExtDir(id: string) {
+  return fs.mkdirSync(path.join(__dirname, tmpPath, `/ext_${id}`));
 }
