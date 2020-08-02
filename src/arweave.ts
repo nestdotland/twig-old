@@ -17,10 +17,6 @@ export interface ArwFile {
  */
 export type ArwConnection = Arweave & { anchor: string };
 
-// @john: this same method but with the user wallet.
-// @divy: perfect!
-// oh no...oops..not this method...the `save()` transaction method!
-// below
 /**
  * Create an arweave connection pool.
  */
