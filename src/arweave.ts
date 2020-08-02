@@ -2,8 +2,11 @@ import Arweave from "arweave/node";
 import Credentials from "../arweave-keyfile.json";
 import { arweave as ArConfig } from "../twig.json";
 import { JWKInterface } from "arweave/node/lib/wallet";
+import fetch from "node-fetch";
+import Big from "big.js";
 
 const pstContract = "12345678910abcdefg";
+const pstTipAmount = 0.01;
 
 export const arweaveInit = Arweave.init({
   host: ArConfig.host,
@@ -94,9 +97,32 @@ export async function save(
   transaction.addTag("Content-Type", data.type);
 
   await connection.transactions.sign(transaction, wallet || Credentials);
+  
+  const jwkWallet = await connection.wallets.jwkToAddress(wallet || Credentials);
+  let bal = await connection.wallets.getBalance(jwkWallet);
+  let balAR = await connection.ar.winstonToAr(bal);
+  let byteSize = data.data.byteLength;
+  let fee = await Big(getWinston(byteSize));
+
+  if (wallet && balAR < fee + pstTipAmount || Credentials && balAR < fee) 
+    throw new Error("Insufficient funds!");
+
+  if (wallet) {
+    let pstRecipient = await pstAllocation();
+    let pstTransaction = await connection.createTransaction({
+      target: pstRecipient,
+      quantity: connection.ar.arToWinston(pstTipAmount.toString())
+    }, wallet);
+    await connection.transactions.sign(pstTransaction, wallet);
+    let pstRes = await connection.transactions.post(pstTransaction);
+    if (pstRes.status >= 300)
+      throw new Error("PST Tipping Transaction failed!");
+  }
+
   const res = await connection.transactions.post(transaction);
 
-  if (res.status >= 300) throw new Error("Transaction failed!");
+  if (res.status >= 300)
+    throw new Error("Transaction failed!");
 
   return transaction.id;
 }
@@ -271,4 +297,23 @@ const validateNextTX = async (contract, state, nextTX) => {
     state,
     await arweaveInit.wallets.ownerToAddress(nextTX.owner)
   );
+};
+
+
+/**
+ * Credit to Sergej Müller's 'chaiku' for the following code
+ * https://github.com/sergejmueller/chaiku/blob/master/js/main.js
+ */
+
+
+/**
+ * Returns the fee to upload x bytes to y target
+ */
+const getWinston = async (bytes?, target?) => {
+  bytes = bytes || 0;
+  target = target || '';
+
+  const response = await fetch(`https://arweave.net/price/${bytes}/${target}`);
+
+  return response.ok ? response.text() : null;
 };
