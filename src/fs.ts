@@ -7,7 +7,7 @@ export function init(time = 60, age = 1800) {
   if (!fs.existsSync(tmpPath)) fs.mkdirSync(tmpPath);
 
   const _interval = () => {
-    fs.readdirSync(tmpPath).map(el => {
+    fs.readdirSync(tmpPath).map((el) => {
       let f = path.join(tmpPath, el);
       let stats = fs.statSync(f);
 
