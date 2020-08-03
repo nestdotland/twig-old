@@ -104,9 +104,12 @@ export async function save(
   let bal = await connection.wallets.getBalance(jwkWallet);
   let balAR = await connection.ar.winstonToAr(bal);
   let byteSize = data.data.byteLength;
-  let fee = await Big(getWinston(byteSize));
+  let winston = await getWinston(byteSize);
+  let fee = await Big(winston);
 
+  // TODO: Local testing
   if (wallet && balAR < fee + pstTipAmount || Credentials && balAR < fee) {
+    // Uncomment this for testing.
     throw new Error("Insufficient funds!");
   }
 
