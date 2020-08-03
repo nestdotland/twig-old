@@ -39,6 +39,6 @@
   "scripts": {
     "dev": "HOST=localhost PORT=3000 tsnd --no-notify ./src",
     "build": "tsc",
-    "prod": "node ./lib/src"
+    "prod": "node --trace-warnings ./lib/src"
   }
 }
