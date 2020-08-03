@@ -11,6 +11,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "arql-ops": "^1.0.0",
     "arweave": "^1.7.1",
     "big.js": "^5.2.2",
     "body-parser": "^1.19.0",

@@ -4,6 +4,8 @@ import { arweave as ArConfig } from "../twig.json";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import fetch from "node-fetch";
 import Big from "big.js";
+import { equals, and } from "arql-ops";
+import Transaction from "arweave/node/lib/transaction";
 
 const pstContract = "12345678910abcdefg";
 const pstTipAmount = 0.01;
@@ -110,7 +112,7 @@ export async function save(
   // TODO: Local testing
   if (wallet && balAR < fee + pstTipAmount || Credentials && balAR < fee) {
     // Uncomment this for testing.
-    throw new Error("Insufficient funds!");
+    // throw new Error("Insufficient funds!");
   }
 
   if (wallet) {
@@ -161,7 +163,7 @@ export const getWalletList = async () => {
  * @param stakeholders The list of PST stakeholders
  * @param maxPST The maximum amount of the PST
  */
-const calculateFeeRecipient = (stakeholders, maxPST) => {
+const calculateFeeRecipient = (stakeholders: any, maxPST: number) => {
   let weightedStakeholders = {};
 
   for (let i = 0; i < stakeholders.length; i++) {
@@ -175,7 +177,7 @@ const calculateFeeRecipient = (stakeholders, maxPST) => {
 /**
  * @param probability The probability of the stakeholders receiving the tip
  */
-const weightedRandom = (probability) => {
+const weightedRandom = (probability: object) => {
   let i, sum = 0, r = Math.random();
 
   for (i in probability) {
@@ -192,7 +194,7 @@ const weightedRandom = (probability) => {
  * Finds the latest contract tip
  * @param contractID The ID of a given PST smart contract
  */
-const findContractTip = async (contractID) => {
+const findContractTip = async (contractID: string) => {
   const contract = await getContract(contractID);
   let current = contract.contractTX;
   let state = getTXState(current);
@@ -211,7 +213,7 @@ const findContractTip = async (contractID) => {
  * Returns information about a PST smart contract
  * @param contractID The ID of a given PST smart contract
  */
-const getContract = async (contractID) => {
+const getContract = async (contractID: string) => {
   const contractTX = await arweaveInit.transactions.get(contractID);
   const contractSrcTXID = await getTag(contractTX, "Contract-Src");
   const minDiff = await getTag(contractTX, "Min-Diff");
@@ -234,27 +236,16 @@ const getContract = async (contractID) => {
 /**
  * Finds the next transaction
  */
-const findNextTX = async (contract, state, currentTX) => {
-  let successorsQuery = {
-    op: "and",
-    expr1: {
-      op: "equals",
-      expr1: "App-Name",
-      expr2: "nest.land",
-    },
-    expr2: {
-      op: "equals",
-      expr1: "Previous-TX",
-      expr2: currentTX.id,
-    },
-  };
-  const response = await arweaveInit.api.post(`arql`, successorsQuery);
-  const results = response.data;
+const findNextTX = async (contract, state, currentTX: Transaction) => {
+  // Create an ARQL query
+  let successorsQuery = and(
+    equals("App-Name", "nest.land"),
+    equals("Previous-TX", currentTX.id)
+  );
+  const successors = await arweaveInit.arql(successorsQuery);
 
-  let successors = (results == "") ? [] : results;
-
-  for (let i = 0; i < successors.length; i++) {
-    let TX = await arweaveInit.transactions.get(successors[i]);
+  for (const successor of successors) {
+    let TX = await arweaveInit.transactions.get(successor);
     if (validateNextTX(contract, state, TX)) {
       return TX;
     }
@@ -267,7 +258,7 @@ const findNextTX = async (contract, state, currentTX) => {
  * Returns the state of a given transaction
  * @param TX A transaction ID
  */
-const getTXState = async (TX) => {
+const getTXState = async (TX: Transaction) => {
   if (!TX) return false;
   if (await getTag(TX, "Type") == "contract") {
     return TX.get("data", { decode: true, string: true });
@@ -283,9 +274,8 @@ const getTXState = async (TX) => {
  * @param TX The transaction ID
  * @param name The name of a desired tag
  */
-const getTag = async (TX, name) => {
+const getTag = async (TX: any, name: string) => {
   let tags = TX.get("tags");
-
   for (let i = 0; i < tags.length; i++) {
     if (tags[i].get("name", { decode: true, string: true }) == name) {
       return tags[i].get("value", { decode: true, string: true });
@@ -298,7 +288,7 @@ const getTag = async (TX, name) => {
 /**
  * Returns data about validating the next transaction
  */
-const validateNextTX = async (contract, state, nextTX) => {
+const validateNextTX = async (contract, state, nextTX: Transaction) => {
   let struct = JSON.parse(nextTX.get("data", { decode: true, string: true }));
   return (
     contract.contractSrc,
@@ -316,7 +306,7 @@ const validateNextTX = async (contract, state, nextTX) => {
 /**
  * Returns the fee to upload x bytes to y target
  */
-const getWinston = async (bytes?, target?) => {
+const getWinston = async (bytes?: number, target?: string) => {
   bytes = bytes || 0;
   target = target || "";
 
