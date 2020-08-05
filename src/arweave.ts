@@ -111,7 +111,7 @@ export async function save(
   }
 
   if (wallet) {
-    let pstRecipient = await pstAllocation();
+    let pstRecipient = await pstAllocation(arweaveInit);
     let pstTransaction = await connection.createTransaction({
       target: pstRecipient,
       quantity: connection.ar.arToWinston(pstTipAmount.toString()),

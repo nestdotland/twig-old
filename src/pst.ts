@@ -1,6 +1,7 @@
 import { equals, and } from "arql-ops";
 import Transaction from "arweave/node/lib/transaction";
 import fetch from "node-fetch";
+import Arweave from "arweave/node";
 
 export const pstContract = "12345678910abcdefg";
 export const pstTipAmount = 0.01;
@@ -13,16 +14,16 @@ export const pstTipAmount = 0.01;
 /**
  * Returns the wallet address of the user to send the tip to
  */
-export const pstAllocation = async () => {
+export const pstAllocation = async (arweaveInit: Arweave) => {
   let maxPST = 1000000000000;
-  return calculateFeeRecipient(await getWalletList(), maxPST);
+  return calculateFeeRecipient(await getWalletList(arweaveInit), maxPST);
 };
 
 /**
    * Returns the wallet list of PST holders
    */
-export const getWalletList = async () => {
-  let tipTX = await findContractTip(pstContract);
+export const getWalletList = async (arweaveInit: Arweave) => {
+  let tipTX = await findContractTip(arweaveInit, pstContract);
   return JSON.parse(await getTXState(tipTX)).walletList;
 };
 
@@ -62,15 +63,19 @@ export const weightedRandom = (probability: object) => {
    * Finds the latest contract tip
    * @param contractID The ID of a given PST smart contract
    */
-export const findContractTip = async (contractID: string) => {
-  const contract = await getContract(contractID);
+export const findContractTip = async (
+  arweaveInit: Arweave,
+  contractID: string,
+) => {
+  const contract = await getContract(arweaveInit, contractID);
   let current = contract.contractTX;
   let state = getTXState(current);
   let last;
 
   do {
     last = current;
-    current = await findNextTX(contract, state, current) || current;
+    current = await findNextTX(arweaveInit, contract, state, current) ||
+      current;
     state = getTXState(current);
   } while (current);
 
@@ -81,7 +86,7 @@ export const findContractTip = async (contractID: string) => {
    * Returns information about a PST smart contract
    * @param contractID The ID of a given PST smart contract
    */
-export const getContract = async (contractID: string) => {
+export const getContract = async (arweaveInit: Arweave, contractID: string) => {
   const contractTX = await arweaveInit.transactions.get(contractID);
   const contractSrcTXID = await getTag(contractTX, "Contract-Src");
   const minDiff = await getTag(contractTX, "Min-Diff");
@@ -104,7 +109,12 @@ export const getContract = async (contractID: string) => {
 /**
    * Finds the next transaction
    */
-export const findNextTX = async (contract, state, currentTX: Transaction) => {
+export const findNextTX = async (
+  arweaveInit: Arweave,
+  contract,
+  state,
+  currentTX: Transaction,
+) => {
   // Create an ARQL query
   let successorsQuery = and(
     equals("App-Name", "nest.land"),
@@ -114,7 +124,7 @@ export const findNextTX = async (contract, state, currentTX: Transaction) => {
 
   for (const successor of successors) {
     let TX = await arweaveInit.transactions.get(successor);
-    if (validateNextTX(contract, state, TX)) {
+    if (validateNextTX(arweaveInit, contract, state, TX)) {
       return TX;
     }
   }
@@ -156,7 +166,12 @@ export const getTag = async (TX: any, name: string) => {
 /**
    * Returns data about validating the next transaction
    */
-export const validateNextTX = async (contract, state, nextTX: Transaction) => {
+export const validateNextTX = async (
+  arweaveInit: Arweave,
+  contract,
+  state,
+  nextTX: Transaction,
+) => {
   let struct = JSON.parse(nextTX.get("data", { decode: true, string: true }));
   return (
     contract.contractSrc,
