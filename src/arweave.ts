@@ -4,6 +4,7 @@ import { arweave as ArConfig } from "../twig.json";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import { pstTipAmount, pstAllocation, getWinston } from "./pst";
 import Big from "big.js";
+import Community from "community-js";
 
 export const arweaveInit = Arweave.init({
   host: ArConfig.host,
@@ -98,6 +99,12 @@ export async function save(
   const jwkWallet = await connection.wallets.jwkToAddress(
     wallet || Credentials,
   );
+  
+  // no idea what to do with this!
+  let community = new Community(connection, wallet || Credentials, 1000 * 60 * 2);
+  community.setCommunityTx(transaction.id);
+  let communityState = await community.getState();
+
   let bal = await connection.wallets.getBalance(jwkWallet);
   let balAR = await connection.ar.winstonToAr(bal);
   let byteSize = data.data.byteLength;
@@ -128,6 +135,6 @@ export async function save(
   if (res.status >= 300) {
     throw new Error("Transaction failed!");
   }
-
+  
   return transaction.id;
 }

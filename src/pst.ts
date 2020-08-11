@@ -2,6 +2,7 @@ import { equals, and } from "arql-ops";
 import Transaction from "arweave/node/lib/transaction";
 import fetch from "node-fetch";
 import Arweave from "arweave/node";
+import Community from "community-js";
 
 export const pstContract = "j8W245BKgr1_k-lB0NjZ0W5m2z6Ibz1vwn7PuoHOBCI";
 export const pstTipAmount = 0.01;

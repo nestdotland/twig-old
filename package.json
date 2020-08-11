@@ -12,9 +12,10 @@
   "private": true,
   "dependencies": {
     "arql-ops": "^1.0.0",
-    "arweave": "^1.7.1",
+    "arweave": "^1.9.1",
     "big.js": "^5.2.2",
     "body-parser": "^1.19.0",
+    "community-js": "^1.0.0",
     "compression": "^1.7.4",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
