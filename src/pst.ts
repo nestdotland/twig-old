@@ -3,7 +3,7 @@ import Transaction from "arweave/node/lib/transaction";
 import fetch from "node-fetch";
 import Arweave from "arweave/node";
 
-export const pstContract = "12345678910abcdefg";
+export const pstContract = "j8W245BKgr1_k-lB0NjZ0W5m2z6Ibz1vwn7PuoHOBCI";
 export const pstTipAmount = 0.01;
 
 /**
@@ -175,9 +175,9 @@ export const validateNextTX = async (
   let struct = JSON.parse(nextTX.get("data", { decode: true, string: true }));
   return (
     contract.contractSrc,
-      struct.input,
-      state,
-      await arweaveInit.wallets.ownerToAddress(nextTX.owner)
+    struct.input,
+    state,
+    await arweaveInit.wallets.ownerToAddress(nextTX.owner)
   );
 };
 
