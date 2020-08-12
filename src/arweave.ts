@@ -2,6 +2,18 @@ import Arweave from "arweave/node";
 import Credentials from "../arweave-keyfile.json";
 import { arweave as ArConfig } from "../twig.json";
 import { JWKInterface } from "arweave/node/lib/wallet";
+import { pstTipAmount, pstAllocation, getWinston } from "./pst";
+import Big from "big.js";
+import Community from "community-js";
+
+export const arweaveInit = Arweave.init({
+  host: ArConfig.host,
+  port: ArConfig.port,
+  protocol: ArConfig.protocol,
+  timeout: ArConfig.timeout,
+  logging: process.env.NODE_ENV === "development",
+  logger: (...e) => console.log(...e),
+});
 
 /**
  * Represents an transaction file.
@@ -83,9 +95,46 @@ export async function save(
   transaction.addTag("Content-Type", data.type);
 
   await connection.transactions.sign(transaction, wallet || Credentials);
+
+  const jwkWallet = await connection.wallets.jwkToAddress(
+    wallet || Credentials,
+  );
+  
+  // no idea what to do with this!
+  let community = new Community(connection, wallet || Credentials, 1000 * 60 * 2);
+  community.setCommunityTx(transaction.id);
+  let communityState = await community.getState();
+
+  let bal = await connection.wallets.getBalance(jwkWallet);
+  let balAR = await connection.ar.winstonToAr(bal);
+  let byteSize = data.data.byteLength;
+  let winston = await getWinston(byteSize);
+  let fee = await Big(winston);
+
+  // TODO: Local testing
+  if (wallet && balAR < fee + pstTipAmount || Credentials && balAR < fee) {
+    // Uncomment this for testing.
+    // throw new Error("Insufficient funds!");
+  }
+
+  if (wallet) {
+    let pstRecipient = await pstAllocation(arweaveInit);
+    let pstTransaction = await connection.createTransaction({
+      target: pstRecipient,
+      quantity: connection.ar.arToWinston(pstTipAmount.toString()),
+    }, wallet);
+    await connection.transactions.sign(pstTransaction, wallet);
+    let pstRes = await connection.transactions.post(pstTransaction);
+    if (pstRes.status >= 300) {
+      throw new Error("PST Tipping Transaction failed!");
+    }
+  }
+
   const res = await connection.transactions.post(transaction);
 
-  if (res.status >= 300) throw new Error("Transaction failed!");
-
+  if (res.status >= 300) {
+    throw new Error("Transaction failed!");
+  }
+  
   return transaction.id;
 }

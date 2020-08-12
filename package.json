@@ -11,12 +11,16 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "arweave": "^1.7.1",
+    "arql-ops": "^1.0.0",
+    "arweave": "^1.9.1",
+    "big.js": "^5.2.2",
     "body-parser": "^1.19.0",
+    "community-js": "^1.0.0",
     "compression": "^1.7.4",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "mime": "^2.4.6",
+    "node-fetch": "^2.6.0",
     "node-recursive-directory": "^1.2.0",
     "semver": "^7.3.2",
     "tar-fs": "^2.1.0"
@@ -36,6 +40,6 @@
   "scripts": {
     "dev": "HOST=localhost PORT=3000 tsnd --no-notify ./src",
     "build": "tsc",
-    "prod": "node ./lib/src"
+    "prod": "node --trace-warnings ./lib/src"
   }
 }
