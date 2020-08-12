@@ -16,16 +16,24 @@ export const pstTipAmount = 0.01;
  * Returns the wallet address of the user to send the tip to
  */
 export const pstAllocation = async (arweaveInit: Arweave) => {
-  let maxPST = 1000000000000;
-  return calculateFeeRecipient(await getWalletList(arweaveInit), maxPST);
+  let community = new Community(arweaveInit);
+  await community.setCommunityTx(pstContract);
+  return await community.selectWeightedHolder();
 };
 
 /**
    * Returns the wallet list of PST holders
    */
 export const getWalletList = async (arweaveInit: Arweave) => {
-  let tipTX = await findContractTip(arweaveInit, pstContract);
-  return JSON.parse(await getTXState(tipTX)).walletList;
+  let community = new Community(arweaveInit);
+  community.setCommunityTx(pstContract);
+  try {
+    let state = await community.getState();
+    console.log(state.balances);
+    return state.balances;
+  } catch (err) {
+    throw err;
+  }
 };
 
 /**
@@ -35,13 +43,14 @@ export const getWalletList = async (arweaveInit: Arweave) => {
    */
 export const calculateFeeRecipient = (stakeholders: any, maxPST: number) => {
   let weightedStakeholders = {};
+  for (const i of stakeholders) {
+    weightedStakeholders[i] = {
+      address: stakeholders,
+      weight: stakeholders[i] / maxPST
+    };
+  }  // None of this is used anymore
 
-  for (let i = 0; i < stakeholders.length; i++) {
-    weightedStakeholders[stakeholders[i].addr] = stakeholders[i].balance /
-      maxPST;
-  }
-
-  return weightedRandom(weightedStakeholders);
+  return weightedStakeholders[weightedRandom(weightedStakeholders)];
 };
 
 /**
@@ -59,29 +68,6 @@ export const weightedRandom = (probability: object) => {
 /**
    * Helper functions from SmartWeave
    */
-
-/**
-   * Finds the latest contract tip
-   * @param contractID The ID of a given PST smart contract
-   */
-export const findContractTip = async (
-  arweaveInit: Arweave,
-  contractID: string,
-) => {
-  const contract = await getContract(arweaveInit, contractID);
-  let current = contract.contractTX;
-  let state = getTXState(current);
-  let last;
-
-  do {
-    last = current;
-    current = await findNextTX(arweaveInit, contract, state, current) ||
-      current;
-    state = getTXState(current);
-  } while (current);
-
-  return last;
-};
 
 /**
    * Returns information about a PST smart contract

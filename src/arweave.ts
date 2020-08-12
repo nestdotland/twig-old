@@ -100,10 +100,6 @@ export async function save(
     wallet || Credentials,
   );
   
-  // no idea what to do with this!
-  let community = new Community(connection, wallet || Credentials, 1000 * 60 * 2);
-  community.setCommunityTx(transaction.id);
-  let communityState = await community.getState();
 
   let bal = await connection.wallets.getBalance(jwkWallet);
   let balAR = await connection.ar.winstonToAr(bal);

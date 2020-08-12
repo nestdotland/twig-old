@@ -359,13 +359,14 @@ color-name@~1.1.4:
   resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.4.tgz#c2a09a87acbde69543de6f63fa3995c826c536a2"
   integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
 
-community-js@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/community-js/-/community-js-1.0.0.tgz#b5611b1a6b991285554a38ed1084898a3d8f278d"
-  integrity sha512-Zs2b/3Sx1EoHDdrs36meWmUopZLscZXkUGnSETg7URH0Y4wgYlR6HeN+gDiWQ06YfB5bVHYkWBDQBwPDJ1mt0Q==
+community-js@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/community-js/-/community-js-1.0.3.tgz#32df2e5a68c8038ad28f57a2e5f4bdf4044da1f5"
+  integrity sha512-c2uQFZvZhU9K6K8An+yOTazSXm9Qg7N0C5jFLZgFs3k2RoiJ5fvs/NQRamPCS1AACUj0+u/luYCAp2rSZCFFXQ==
   dependencies:
     arweave "^1.9.1"
     smartweave "https://arweave.net/AM-u4X2po-3Tx7fma3lRonCfLwrjI42IALwDL_YFXBs"
+    tiny-worker "^2.3.0"
 
 compressible@~2.0.16:
   version "2.0.18"
@@ -531,6 +532,11 @@ escape-html@~1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/escape-html/-/escape-html-1.0.3.tgz#0258eae4d3d0c0974de1c169188ef0051d1d1988"
   integrity sha1-Aljq5NPQwJdN4cFpGI7wBR0dGYg=
+
+esm@^3.2.25:
+  version "3.2.25"
+  resolved "https://registry.yarnpkg.com/esm/-/esm-3.2.25.tgz#342c18c29d56157688ba5ce31f8431fbb795cc10"
+  integrity sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==
 
 etag@~1.8.1:
   version "1.8.1"
@@ -1421,6 +1427,13 @@ tar-stream@^2.0.0:
     fs-constants "^1.0.0"
     inherits "^2.0.3"
     readable-stream "^3.1.1"
+
+tiny-worker@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/tiny-worker/-/tiny-worker-2.3.0.tgz#715ae34304c757a9af573ae9a8e3967177e6011e"
+  integrity sha512-pJ70wq5EAqTAEl9IkGzA+fN0836rycEuz2Cn6yeZ6FRzlVS5IDOkFHpIoEsksPRQV34GDqXm65+OlnZqUSyK2g==
+  dependencies:
+    esm "^3.2.25"
 
 to-regex-range@^5.0.1:
   version "5.0.1"
