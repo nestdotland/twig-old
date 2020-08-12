@@ -17,7 +17,7 @@ export const pstTipAmount = 0.01;
  */
 export const pstAllocation = async (arweaveInit: Arweave) => {
   let maxPST = 1000000;
-  return calculateFeeRecipient(await getWalletList(arweaveInit), maxPST);
+  return calculateFeeRecipient(await getWalletList(arweaveInit), maxPST).address;
 };
 
 /**
@@ -43,10 +43,13 @@ export const getWalletList = async (arweaveInit: Arweave) => {
 export const calculateFeeRecipient = (stakeholders: any, maxPST: number) => {
   let weightedStakeholders = {};
   for (const i of stakeholders) {
-    weightedStakeholders[stakeholders] = stakeholders[i] / maxPST;
+    weightedStakeholders[i] = {
+      address: stakeholders,
+      weight: stakeholders[i] / maxPST
+    };
   }
-  
-  return weightedRandom(weightedStakeholders);
+
+  return weightedStakeholders[weightedRandom(weightedStakeholders)];
 };
 
 /**
@@ -64,29 +67,6 @@ export const weightedRandom = (probability: object) => {
 /**
    * Helper functions from SmartWeave
    */
-
-/**
-   * Finds the latest contract tip
-   * @param contractID The ID of a given PST smart contract
-   */
-export const findContractTip = async (
-  arweaveInit: Arweave,
-  contractID: string,
-) => {
-  const contract = await getContract(arweaveInit, contractID);
-  let current = contract.contractTX;
-  let state = getTXState(current);
-  let last;
-
-  do {
-    last = current;
-    current = await findNextTX(arweaveInit, contract, state, current) ||
-      current;
-    state = getTXState(current);
-  } while (current);
-
-  return last;
-};
 
 /**
    * Returns information about a PST smart contract
