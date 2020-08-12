@@ -6,7 +6,6 @@ import Community from "community-js";
 
 export const pstContract = "j8W245BKgr1_k-lB0NjZ0W5m2z6Ibz1vwn7PuoHOBCI";
 export const pstTipAmount = 0.01;
-const community = new Community();
 
 /**
  * Credit to Anish Agnihotri's 'Weve' for the following code
@@ -25,6 +24,7 @@ export const pstAllocation = async (arweaveInit: Arweave) => {
    * Returns the wallet list of PST holders
    */
 export const getWalletList = async (arweaveInit: Arweave) => {
+  let community = new Community(arweaveInit);
   community.setCommunityTx(pstContract);
   try {
     let state = await community.getState();
