@@ -16,7 +16,7 @@ export const pstTipAmount = 0.01;
  * Returns the wallet address of the user to send the tip to
  */
 export const pstAllocation = async (arweaveInit: Arweave) => {
-  let maxPST = 1000000000000;
+  let maxPST = 1000000;
   return calculateFeeRecipient(await getWalletList(arweaveInit), maxPST);
 };
 
@@ -28,6 +28,7 @@ export const getWalletList = async (arweaveInit: Arweave) => {
   community.setCommunityTx(pstContract);
   try {
     let state = await community.getState();
+    console.log(state.balances);
     return state.balances;
   } catch (err) {
     throw err;
@@ -41,12 +42,10 @@ export const getWalletList = async (arweaveInit: Arweave) => {
    */
 export const calculateFeeRecipient = (stakeholders: any, maxPST: number) => {
   let weightedStakeholders = {};
-
-  for (let i = 0; i < stakeholders.length; i++) {
-    weightedStakeholders[stakeholders[i].addr] = stakeholders[i].balance /
-      maxPST;
+  for (const i of stakeholders) {
+    weightedStakeholders[stakeholders] = stakeholders[i] / maxPST;
   }
-
+  
   return weightedRandom(weightedStakeholders);
 };
 
