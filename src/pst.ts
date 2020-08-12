@@ -17,8 +17,8 @@ export const pstTipAmount = 0.01;
  */
 export const pstAllocation = async (arweaveInit: Arweave) => {
   let community = new Community(arweaveInit);
-  community.setCommunityTx(pstContract);
-  return community.selectWeightedHolder();
+  await community.setCommunityTx(pstContract);
+  return await community.selectWeightedHolder();
 };
 
 /**
@@ -48,7 +48,7 @@ export const calculateFeeRecipient = (stakeholders: any, maxPST: number) => {
       address: stakeholders,
       weight: stakeholders[i] / maxPST
     };
-  }
+  }  // None of this is used anymore
 
   return weightedStakeholders[weightedRandom(weightedStakeholders)];
 };
