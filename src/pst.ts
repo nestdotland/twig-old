@@ -16,8 +16,9 @@ export const pstTipAmount = 0.01;
  * Returns the wallet address of the user to send the tip to
  */
 export const pstAllocation = async (arweaveInit: Arweave) => {
-  let maxPST = 1000000;
-  return calculateFeeRecipient(await getWalletList(arweaveInit), maxPST).address;
+  let community = new Community(arweaveInit);
+  community.setCommunityTx(pstContract);
+  return community.selectWeightedHolder();
 };
 
 /**
