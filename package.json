@@ -20,7 +20,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "mime": "^2.4.6",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "node-recursive-directory": "^1.2.0",
     "semver": "^7.3.2",
     "tar-fs": "^2.1.0"
